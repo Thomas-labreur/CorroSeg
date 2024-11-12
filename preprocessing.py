@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import glob
 from typing import List, Tuple
 from sklearn.preprocessing import RobustScaler
@@ -66,3 +67,42 @@ def preprocess(in_folder: str, z_threshold: float = 3) -> Tuple[List[str], np.nd
     # Display results and return it
     print(f"{len(file_paths)-len(inlier_patch_names)} files have been removed, {len(inlier_patch_names)} still remain.")
     return inlier_patch_names, inlier_patch_array
+
+def data_augmentation(X:np.ndarray, y: pd.DataFrame) -> Tuple[np.ndarray, pd.DataFrame]:
+    """Apply horizontal flipping, vertical flipping and horizontal roll to 36x36 input and output images
+
+    Args:
+        X (np.ndarray): An array of input images of shape (nx36x36x1) where n is the number of original images
+        y (pd.DataFrame): A dataframe of output flat images of shape (nx1296) with string indexes
+
+    Returns:
+        np.ndarray: An array of input images of shape (Nx36x36x1) where N is the number of augmented data
+        pd.DataFrame: A dataframe of output flat images of shape (Nx1296) with string indexes
+    """
+    
+    # Initialize list of input and output data
+    X_list = [X]
+    y_list = [y.values]
+    index = list(y.index)
+    
+    # Vertical flip
+    X_list.append(np.flip(X, axis=1))
+    y_list.append( np.flip(y.values.reshape(-1, 36, 36), axis=1).reshape(-1, 1296))
+    index += [idx + "_vflip" for idx in y.index]
+    
+    # Horizontal flip
+    X_list.append(np.flip(X, axis=2))
+    y_list.append( np.flip(y.values.reshape(-1, 36, 36), axis=2).reshape(-1, 1296))
+    index += [idx + "_hflip" for idx in y.index]
+    
+    # Horizontal roll
+    for shift in range(1,36):
+        X_list.append(np.roll(X, shift=shift, axis=2))
+        y_list.append(np.roll(y.values.reshape(-1, 36, 36), shift=shift, axis=2).reshape(-1, 1296))
+        index += [idx + f"_{shift}roll" for idx in y.index]
+        
+    # List assembly
+    X_augmented, y_augmented = np.concatenate(X_list), np.concatenate(y_list)
+    y_augmented = pd.DataFrame(y_augmented, index = index)
+    
+    return X_augmented, y_augmented
