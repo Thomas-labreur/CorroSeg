@@ -100,7 +100,7 @@ def data_augmentation(X:np.ndarray, y: pd.DataFrame) -> Tuple[np.ndarray, pd.Dat
         X_list.append(np.roll(X, shift=shift, axis=2))
         y_list.append(np.roll(y.values.reshape(-1, 36, 36), shift=shift, axis=2).reshape(-1, 1296))
         index += [idx + f"_{shift}roll" for idx in y.index]
-        
+ 
     # List assembly
     X_augmented, y_augmented = np.concatenate(X_list), np.concatenate(y_list)
     y_augmented = pd.DataFrame(y_augmented, index = index)

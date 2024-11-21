@@ -12,6 +12,10 @@ def IoU(y_test: pd.DataFrame, y_pred: pd.DataFrame) -> float:
         float: between 0 and 1, mean IoU over all dataframe lines
     """
     
+    # Same dtype
+    y_test = y_test.astype(int)
+    y_pred = y_pred.astype(int)
+    
     # Compute intersection and union
     intersection = (y_test & y_pred).sum(axis=1)
     union = (y_test | y_pred).sum(axis=1)
